@@ -8,12 +8,18 @@ import (
 	"time"
 )
 
+// every type is a service , the methods every type contains are the service.method
 type Foo int
 
 type Args struct{ Num1, Num2 int }
 
 func (f Foo) Sum(args Args, reply *int) error {
 	*reply = args.Num1 + args.Num2
+	return nil
+}
+
+func (f Foo) Minus(args Args, reply *int) error {
+	*reply = args.Num2 - args.Num1
 	return nil
 }
 
@@ -35,6 +41,7 @@ func main() {
 	log.SetFlags(0)
 	addr := make(chan string)
 	go startServer(addr)
+	// the client here can just refer to a computer such as my computer
 	client, _ := geerpc.Dial("tcp", <-addr)
 	defer func() { _ = client.Close() }()
 
@@ -50,6 +57,19 @@ func main() {
 				log.Fatal("call Foo.Sum error:", err)
 			}
 			log.Printf("%d + %d = %d", args.Num1, args.Num2, reply)
+		}(i)
+	}
+
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			args := &Args{Num1: i, Num2: i * i}
+			var reply int
+			if err := client.Call("Foo.Minus", args, &reply); err != nil {
+				log.Fatal("call Foo.Minus error:", err)
+			}
+			log.Printf("%d - %d = %d", args.Num2, args.Num1, reply)
 		}(i)
 	}
 

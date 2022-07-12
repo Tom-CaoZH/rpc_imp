@@ -62,6 +62,8 @@ func (client *Client) registerCall(call *Call) (uint64, error) {
 	if client.closing || client.shutdown {
 		return 0, ErrShutdown
 	}
+	// the seq is used to indicate the unique batch
+	// every client represents a unique batch
 	call.Seq = client.seq
 	client.pending[call.Seq] = call
 	client.seq++
@@ -185,6 +187,8 @@ func (client *Client) send(call *Call) {
 		return
 	}
 
+	// because of the sending lock , there will only be one request in the process
+	// and only after the request finish there will be an another one, so the pair service is just one
 	client.header.ServiceMethod = call.ServiceMethod
 	client.header.Seq = seq
 	client.header.Error = ""

@@ -53,12 +53,13 @@ func newService(rcvr interface{}) *service {
 	s.name = reflect.Indirect(s.rcvr).Type().Name()
 	s.typ = reflect.TypeOf(rcvr)
 	if !ast.IsExported(s.name) {
-		log.Fatal("rpc server: %s is not a valid service name", s.name)
+		log.Fatalf("rpc server: %s is not a valid service name", s.name)
 	}
 	s.registerMethods()
 	return s
 }
 
+// there are some checks
 func (s *service) registerMethods() {
 	s.method = make(map[string]*methodType)
 	for i := 0; i < s.typ.NumMethod(); i++ {
